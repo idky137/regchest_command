@@ -1,0 +1,26 @@
+[package]
+name = "regchest_commands"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+zingo-testutils = { git = "https://github.com/zingolabs/zingolib.git", version = "0.1.0" }
+zingolib = { git = "https://github.com/zingolabs/zingolib.git", version = "0.2.0" }
+tokio = { version = "1", features = ["full"] }
+regex = "1"
+lazy_static = "1.4.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[workspace.dependencies]
+clap = "4.4"
+zcash_address = { git = "https://github.com/zingolabs/librustzcash.git", tag = "zingo_rc.2" }
+zcash_client_backend = { git = "https://github.com/zingolabs/librustzcash.git", tag = "zingo_rc.2" }
+zcash_encoding = { git = "https://github.com/zingolabs/librustzcash.git", tag = "zingo_rc.2" }
+zcash_note_encryption = "0.4"
+zcash_primitives = { git = "https://github.com/zingolabs/librustzcash.git", tag = "zingo_rc.2" }
+zcash_proofs = { git = "https://github.com/zingolabs/librustzcash.git", tag = "zingo_rc.2" }
+orchard = "0.6"
+
