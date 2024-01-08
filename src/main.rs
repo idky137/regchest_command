@@ -53,6 +53,7 @@ pub enum CommandInput {
     GenerateNBlocksReturnNewHeight((String, String)),
 }
 
+#[derive(Debug)]
 pub enum CommandOutput {
     DoUserCommand(String),
     UnfundedClient(String),
@@ -174,64 +175,33 @@ impl CommandExec<CommandInput, CommandOutput> for GenerateNBlocksReturnNewHeight
 
 // --- run_com
 // --- runs command received and returns output if exists
-fn run_command(com_nametype: &str, com_inputs_vec: Vec<&str>) -> String {
+fn run_command(com_nametype: &str, com_inputs: CommandInput) -> CommandOutput {
     let com_lib = command_lib();
-    let mut com_out = String::new();
 
     println!("In run_com:");
 
-    // --- change input type to enum, add match to find input type and put code below in main??? also change output type to enum??? then have seperate function that calls run_command and hold state of outputs (lightclients..) (or put in main?)
-    // --- THIS - change input_vec, output_vec to enum, create second function to call run_command from string_input and return string_output(possible call seperate function to unwrap input_string) (move input and output match statements here)(this is where actual LightClient.. are held in scope and new calls to run_command are made) (once called, program never leaves this function until all commands have been executed)
-    println!("Loading test scenario");
-    let (_regtest_manager, _cph, _faucet, recipient, _txid) =
-        RT.block_on(async move { scenarios::faucet_funded_recipient_default(100_000).await });
-    let command_inputs = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
-    // ---
-
-    match com_lib.get(&com_nametype) {
-        Some(value) => {
-            let com_out_com = value.exec(command_inputs);
-            match com_out_com {
-                CommandOutput::DoUserCommand(output) => {
-                    println!("DoUserCommand with value: {}", output);
-                    com_out = output;
-                }
-                CommandOutput::UnfundedClient(output) => {
-                    println!("UnfundedClient with value: {}", output);
-                    com_out = output;
-                }
-                CommandOutput::Faucet(output) => {
-                    println!("Faucet with value: {}", output);
-                    com_out = output;
-                }
-                CommandOutput::FaucetRecipient(output) => {
-                    println!("FaucetRecipient with value: {}", output);
-                    com_out = output;
-                }
-                CommandOutput::FaucetFundedRecipient(output) => {
-                    println!("FaucetFundedRecipient with value: {}", output);
-                    com_out = output;
-                }
-                CommandOutput::GenerateNBlocksReturnNewHeight(output) => {
-                    println!("DoUserCommand with value: {}", output);
-                    com_out = output;
-                }
-            }
-        }
+    let com_output = match com_lib.get(&com_nametype) {
+        Some(value) => value.exec(com_inputs),
         None => {
             println!("Command not recognised");
-            com_out = "Command not recognised".to_string();
+            CommandOutput::DoUserCommand("command not recognised".to_string())
         }
-    }
-    // ---
+    };
     println!("Command complete");
-
-    com_out
+    com_output
 }
 
 // --- main
 // ---
 fn main() {
-    let out_string = run_command("do_user_command", vec!["1", "2", "3"]);
-    println!("Output: {}", out_string);
+    println!("Loading test scenario");
+    let (_regtest_manager, _cph, _faucet, recipient, _txid) =
+        RT.block_on(async move { scenarios::faucet_funded_recipient_default(100_000).await });
+
+    let command_str = "do_user_command";
+    let command_inputs = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
+
+    println!("Calling run_command");
+    let command_output = run_command(command_str, command_inputs);
+    println!("Output: {:?}", command_output);
 }
