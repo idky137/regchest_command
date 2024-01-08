@@ -6,10 +6,15 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use tokio::runtime::Runtime;
-use zingo_testutils::scenarios;
+use zingo_testutils::{
+    regtest::{ChildProcessHandler, RegtestManager},
+    scenarios,
+};
+use zingoconfig::RegtestNetwork;
 use zingolib::{
     commands::{self, do_user_command},
     lightclient::LightClient,
+    wallet::Pool,
 };
 
 lazy_static! {
@@ -46,20 +51,32 @@ pub fn command_lib() -> HashMap<&'static str, Box<dyn CommandExec<CommandInput, 
 
 pub enum CommandInput {
     DoUserCommand((String, Vec<String>, LightClient)),
-    UnfundedClient((String, String)),
-    Faucet((String, String)),
-    FaucetRecipient((String, String)),
-    FaucetFundedRecipient((String, String)),
+    UnfundedClient(RegtestNetwork),
+    Faucet(Pool, RegtestNetwork),
+    FaucetRecipient(Pool, RegtestNetwork),
+    FaucetFundedRecipient(Option<u64>, Option<u64>, Option<u64>, Pool, RegtestNetwork),
     GenerateNBlocksReturnNewHeight((String, String)),
 }
 
-#[derive(Debug)]
 pub enum CommandOutput {
     DoUserCommand(String),
-    UnfundedClient(String),
-    Faucet(String),
-    FaucetRecipient(String),
-    FaucetFundedRecipient(String),
+    UnfundedClient(RegtestManager, ChildProcessHandler, LightClient),
+    Faucet(RegtestManager, ChildProcessHandler, LightClient),
+    FaucetRecipient(
+        RegtestManager,
+        ChildProcessHandler,
+        LightClient,
+        LightClient,
+    ),
+    FaucetFundedRecipient(
+        RegtestManager,
+        ChildProcessHandler,
+        LightClient,
+        LightClient,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+    ),
     GenerateNBlocksReturnNewHeight(String),
 }
 
@@ -72,11 +89,9 @@ impl CommandExec<CommandInput, CommandOutput> for DoUserCommand {
                 println!("test entry - DoUserCommand");
                 let v_slice: Vec<&str> = v.iter().map(|s| s.as_str()).collect();
                 com_out = do_user_command(&s, &v_slice, &lc);
-                //com_out = "test entry - DoUserCommand".to_string();
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
         CommandOutput::DoUserCommand(com_out)
@@ -86,72 +101,96 @@ impl CommandExec<CommandInput, CommandOutput> for DoUserCommand {
 struct UnfundedClient {}
 impl CommandExec<CommandInput, CommandOutput> for UnfundedClient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let mut regtest_manager: RegtestManager;
+        let mut cph: ChildProcessHandler;
+        let mut client: LightClient;
         match com_inputs {
-            CommandInput::UnfundedClient((s_1, s_2)) => {
+            CommandInput::UnfundedClient(rn) => {
                 println!("test entry - UnfundedClient");
-                com_out = "test entry - UnfundedClient".to_string();
+                (regtest_manager, cph, client) =
+                    RT.block_on(async move { scenarios::unfunded_client(rn).await });
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::UnfundedClient(com_out)
+        CommandOutput::UnfundedClient(regtest_manager, cph, client)
     }
 }
 
 struct Faucet {}
 impl CommandExec<CommandInput, CommandOutput> for Faucet {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let mut regtest_manager: RegtestManager;
+        let mut cph: ChildProcessHandler;
+        let mut client: LightClient;
         match com_inputs {
-            CommandInput::Faucet((s_1, s_2)) => {
+            CommandInput::Faucet(p, rn) => {
                 println!("test entry - Faucet");
-                com_out = "test entry - Faucet".to_string();
+                (regtest_manager, cph, client) =
+                    RT.block_on(async move { scenarios::faucet(p, rn).await });
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::Faucet(com_out)
+        CommandOutput::Faucet(regtest_manager, cph, client)
     }
 }
 
 struct FaucetRecipient {}
 impl CommandExec<CommandInput, CommandOutput> for FaucetRecipient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let mut regtest_manager: RegtestManager;
+        let mut cph: ChildProcessHandler;
+        let mut faucet: LightClient;
+        let mut recipient: LightClient;
         match com_inputs {
-            CommandInput::FaucetRecipient((s_1, s_2)) => {
+            CommandInput::FaucetRecipient(p, rn) => {
                 println!("test entry - FaucetRecipient");
-                com_out = "test entry - FaucetRecipient".to_string();
+
+                (regtest_manager, cph, faucet, recipient) =
+                    RT.block_on(async move { scenarios::faucet_recipient(p, rn).await });
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::FaucetRecipient(com_out)
+        CommandOutput::FaucetRecipient(regtest_manager, cph, faucet, recipient)
     }
 }
 
 struct FaucetFundedRecipient {}
 impl CommandExec<CommandInput, CommandOutput> for FaucetFundedRecipient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let mut regtest_manager: RegtestManager;
+        let mut cph: ChildProcessHandler;
+        let mut faucet: LightClient;
+        let mut recipient: LightClient;
+        let mut opo1: Option<String>;
+        let mut opo2: Option<String>;
+        let mut opo3: Option<String>;
         match com_inputs {
-            CommandInput::FaucetFundedRecipient((s_1, s_2)) => {
+            CommandInput::FaucetFundedRecipient(op1, op2, op3, p, rn) => {
                 println!("test entry - FaucetFundedRecipient");
-                com_out = "test entry - FaucetFundedRecipient".to_string();
+                (regtest_manager, cph, faucet, recipient, opo1, opo2, opo3) =
+                    RT.block_on(async move {
+                        scenarios::faucet_funded_recipient(op1, op2, op3, p, rn).await
+                    });
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::FaucetFundedRecipient(com_out)
+        CommandOutput::FaucetFundedRecipient(
+            regtest_manager,
+            cph,
+            faucet,
+            recipient,
+            opo1,
+            opo2,
+            opo3,
+        )
     }
 }
 
@@ -165,8 +204,7 @@ impl CommandExec<CommandInput, CommandOutput> for GenerateNBlocksReturnNewHeight
                 com_out = "test entry - GenerateNBlocksReturnNewHeight".to_string();
             }
             _ => {
-                println!("Unexpected CommandInput variant");
-                com_out = "Unexpected input".to_string();
+                panic!("Unexpected Command Input variant");
             }
         }
         CommandOutput::GenerateNBlocksReturnNewHeight(com_out)
@@ -183,8 +221,7 @@ fn run_command(com_nametype: &str, com_inputs: CommandInput) -> CommandOutput {
     let com_output = match com_lib.get(&com_nametype) {
         Some(value) => value.exec(com_inputs),
         None => {
-            println!("Command not recognised");
-            CommandOutput::DoUserCommand("command not recognised".to_string())
+            panic!("Command not recognised");
         }
     };
     println!("Command complete");
@@ -203,5 +240,5 @@ fn main() {
 
     println!("Calling run_command");
     let command_output = run_command(command_str, command_inputs);
-    println!("Output: {:?}", command_output);
+    // println!("Output: {:?}", command_output);
 }
