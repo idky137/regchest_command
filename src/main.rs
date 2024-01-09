@@ -7,15 +7,12 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use tokio::runtime::Runtime;
 use zingo_testutils::{
+    generate_n_blocks_return_new_height,
     regtest::{ChildProcessHandler, RegtestManager},
     scenarios,
 };
 use zingoconfig::RegtestNetwork;
-use zingolib::{
-    commands::{self, do_user_command},
-    lightclient::LightClient,
-    wallet::Pool,
-};
+use zingolib::{commands::do_user_command, lightclient::LightClient, wallet::Pool};
 
 lazy_static! {
     static ref RT: Runtime = tokio::runtime::Runtime::new().unwrap();
@@ -55,7 +52,7 @@ pub enum CommandInput {
     Faucet(Pool, RegtestNetwork),
     FaucetRecipient(Pool, RegtestNetwork),
     FaucetFundedRecipient(Option<u64>, Option<u64>, Option<u64>, Pool, RegtestNetwork),
-    GenerateNBlocksReturnNewHeight((String, String)),
+    GenerateNBlocksReturnNewHeight(RegtestManager, u32),
 }
 
 pub enum CommandOutput {
@@ -77,16 +74,16 @@ pub enum CommandOutput {
         Option<String>,
         Option<String>,
     ),
-    GenerateNBlocksReturnNewHeight(String),
+    GenerateNBlocksReturnNewHeight(u32),
 }
 
 struct DoUserCommand {}
 impl CommandExec<CommandInput, CommandOutput> for DoUserCommand {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let com_out: String;
         match com_inputs {
             CommandInput::DoUserCommand((s, v, lc)) => {
-                println!("test entry - DoUserCommand");
+                println!("Test entry - in DoUserCommand");
                 let v_slice: Vec<&str> = v.iter().map(|s| s.as_str()).collect();
                 com_out = do_user_command(&s, &v_slice, &lc);
             }
@@ -101,12 +98,12 @@ impl CommandExec<CommandInput, CommandOutput> for DoUserCommand {
 struct UnfundedClient {}
 impl CommandExec<CommandInput, CommandOutput> for UnfundedClient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut regtest_manager: RegtestManager;
-        let mut cph: ChildProcessHandler;
-        let mut client: LightClient;
+        let regtest_manager: RegtestManager;
+        let cph: ChildProcessHandler;
+        let client: LightClient;
         match com_inputs {
             CommandInput::UnfundedClient(rn) => {
-                println!("test entry - UnfundedClient");
+                println!("Test entry - in UnfundedClient");
                 (regtest_manager, cph, client) =
                     RT.block_on(async move { scenarios::unfunded_client(rn).await });
             }
@@ -121,12 +118,12 @@ impl CommandExec<CommandInput, CommandOutput> for UnfundedClient {
 struct Faucet {}
 impl CommandExec<CommandInput, CommandOutput> for Faucet {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut regtest_manager: RegtestManager;
-        let mut cph: ChildProcessHandler;
-        let mut client: LightClient;
+        let regtest_manager: RegtestManager;
+        let cph: ChildProcessHandler;
+        let client: LightClient;
         match com_inputs {
             CommandInput::Faucet(p, rn) => {
-                println!("test entry - Faucet");
+                println!("Test entry - in Faucet");
                 (regtest_manager, cph, client) =
                     RT.block_on(async move { scenarios::faucet(p, rn).await });
             }
@@ -141,13 +138,13 @@ impl CommandExec<CommandInput, CommandOutput> for Faucet {
 struct FaucetRecipient {}
 impl CommandExec<CommandInput, CommandOutput> for FaucetRecipient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut regtest_manager: RegtestManager;
-        let mut cph: ChildProcessHandler;
-        let mut faucet: LightClient;
-        let mut recipient: LightClient;
+        let regtest_manager: RegtestManager;
+        let cph: ChildProcessHandler;
+        let faucet: LightClient;
+        let recipient: LightClient;
         match com_inputs {
             CommandInput::FaucetRecipient(p, rn) => {
-                println!("test entry - FaucetRecipient");
+                println!("Test entry - in FaucetRecipient");
 
                 (regtest_manager, cph, faucet, recipient) =
                     RT.block_on(async move { scenarios::faucet_recipient(p, rn).await });
@@ -163,16 +160,16 @@ impl CommandExec<CommandInput, CommandOutput> for FaucetRecipient {
 struct FaucetFundedRecipient {}
 impl CommandExec<CommandInput, CommandOutput> for FaucetFundedRecipient {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut regtest_manager: RegtestManager;
-        let mut cph: ChildProcessHandler;
-        let mut faucet: LightClient;
-        let mut recipient: LightClient;
-        let mut opo1: Option<String>;
-        let mut opo2: Option<String>;
-        let mut opo3: Option<String>;
+        let regtest_manager: RegtestManager;
+        let cph: ChildProcessHandler;
+        let faucet: LightClient;
+        let recipient: LightClient;
+        let opo1: Option<String>;
+        let opo2: Option<String>;
+        let opo3: Option<String>;
         match com_inputs {
             CommandInput::FaucetFundedRecipient(op1, op2, op3, p, rn) => {
-                println!("test entry - FaucetFundedRecipient");
+                println!("Test entry - in FaucetFundedRecipient");
                 (regtest_manager, cph, faucet, recipient, opo1, opo2, opo3) =
                     RT.block_on(async move {
                         scenarios::faucet_funded_recipient(op1, op2, op3, p, rn).await
@@ -197,11 +194,13 @@ impl CommandExec<CommandInput, CommandOutput> for FaucetFundedRecipient {
 struct GenerateNBlocksReturnNewHeight {}
 impl CommandExec<CommandInput, CommandOutput> for GenerateNBlocksReturnNewHeight {
     fn exec(&self, com_inputs: CommandInput) -> CommandOutput {
-        let mut com_out = String::new();
+        let com_out: u32;
         match com_inputs {
-            CommandInput::GenerateNBlocksReturnNewHeight((s_1, s_2)) => {
-                println!("test entry - GenerateNBlocksReturnNewHeight");
-                com_out = "test entry - GenerateNBlocksReturnNewHeight".to_string();
+            CommandInput::GenerateNBlocksReturnNewHeight(rm, n) => {
+                println!("Test entry - in GenerateNBlocksReturnNewHeight");
+                com_out = RT
+                    .block_on(async move { generate_n_blocks_return_new_height(&rm, n).await })
+                    .expect("Invalid response returned");
             }
             _ => {
                 panic!("Unexpected Command Input variant");
@@ -212,11 +211,11 @@ impl CommandExec<CommandInput, CommandOutput> for GenerateNBlocksReturnNewHeight
 }
 
 // --- run_com
-// --- runs command received and returns output if exists
+// --- runs command received in "com_nametype"and returns output
 fn run_command(com_nametype: &str, com_inputs: CommandInput) -> CommandOutput {
     let com_lib = command_lib();
 
-    println!("In run_com:");
+    println!("Test entry - in run_command:");
 
     let com_output = match com_lib.get(&com_nametype) {
         Some(value) => value.exec(com_inputs),
@@ -224,21 +223,60 @@ fn run_command(com_nametype: &str, com_inputs: CommandInput) -> CommandOutput {
             panic!("Command not recognised");
         }
     };
-    println!("Command complete");
     com_output
 }
 
+// --- print_co
+// --- takes CommandOutput Enum and prints to console
+fn print_command(co: CommandOutput) {
+    println!("Test entry - in print_command:");
+    match co {
+        CommandOutput::DoUserCommand(user_command) => {
+            println!("DoUserCommand Output: {}", user_command);
+        }
+        CommandOutput::UnfundedClient(_regtest_manager, _child_process_handler, _light_client) => {
+            println!("Scenario::UnfundedClient");
+        }
+        CommandOutput::Faucet(_regtest_manager, _child_process_handler, _light_client) => {
+            println!("Scenario::Faucet");
+        }
+        CommandOutput::FaucetRecipient(
+            _regtest_manager,
+            _child_process_handler,
+            _sender_light_client,
+            _recipient_light_client,
+        ) => {
+            println!("Scenario::FaucetRecipient");
+        }
+        CommandOutput::FaucetFundedRecipient(
+            _regtest_manager,
+            _child_process_handler,
+            _sender_light_client,
+            _recipient_light_client,
+            _optional_field1,
+            _optional_field2,
+            _optional_field3,
+        ) => {
+            println!("Scenario::FaucetFundedRecipient");
+        }
+        CommandOutput::GenerateNBlocksReturnNewHeight(new_height) => {
+            println!("GenerateNBlocksReturnNewHeight Output: {}", new_height);
+        }
+    }
+}
+
 // --- main
-// ---
+// --- used for testing..
 fn main() {
-    println!("Loading test scenario");
+    println!("Test entry - Starting main:");
+    println!("Test entry - Loading test scenario:");
     let (_regtest_manager, _cph, _faucet, recipient, _txid) =
         RT.block_on(async move { scenarios::faucet_funded_recipient_default(100_000).await });
 
     let command_str = "do_user_command";
     let command_inputs = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
 
-    println!("Calling run_command");
+    println!("Test entry - Calling run_command:");
     let command_output = run_command(command_str, command_inputs);
-    // println!("Output: {:?}", command_output);
+    print_command(command_output);
 }
