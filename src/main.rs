@@ -228,7 +228,7 @@ fn run_command(com_nametype: &str, com_inputs: CommandInput) -> CommandOutput {
 
 // --- print_co
 // --- takes CommandOutput Enum and prints to console
-fn print_command(co: CommandOutput) {
+fn print_command(co: &CommandOutput) {
     println!("Test entry - in print_command:");
     match co {
         CommandOutput::DoUserCommand(user_command) => {
@@ -268,7 +268,7 @@ fn print_command(co: CommandOutput) {
 // --- main
 // --- used for testing..
 fn main() {
-    println!("Starting Test:");
+    println!("Starting Tests:");
     let regtest_network = RegtestNetwork::all_upgrades_active();
 
     // --- Test 1: Scenario:FaucetFundedRecipient
@@ -282,6 +282,7 @@ fn main() {
         regtest_network,
     );
     let command_output_1 = run_command(command_str_1, command_inputs_1);
+    print_command(&command_output_1);
     let regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
     let _faucet: LightClient;
@@ -312,13 +313,12 @@ fn main() {
         }
     }
 
-    //print_command(command_output_1);
     // --- Test 2a: DoUserCommand:Balance
     println!("Test entry 2a: Calling run_command::do_user_command::balance:");
     let command_str_2a = "do_user_command";
     let command_inputs_2a = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
     let command_output_2a = run_command(command_str_2a, command_inputs_2a);
-    print_command(command_output_2a);
+    print_command(&command_output_2a);
 
     // --- Test 2b: DoUserCommand:Balance
     // println!("Test entry 2b: Calling run_command::do_user_command::balance:");
@@ -332,7 +332,7 @@ fn main() {
     let command_str_3a = "generate_n_blocks_return_new_height";
     let command_inputs_3a = CommandInput::GenerateNBlocksReturnNewHeight(regtest_manager, 0);
     let command_output_3a = run_command(command_str_3a, command_inputs_3a);
-    print_command(command_output_3a);
+    print_command(&command_output_3a);
 
     // --- Test 3b: GenerateNBlocksReturnNewHeight
     // println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height:");
@@ -341,3 +341,9 @@ fn main() {
     // let command_output_3b = run_command(command_str_3b, command_inputs_3b);
     // print_command(command_output_3b);
 }
+
+// create function that takes CommandOutput as its input, unwraps it, then outputs each field in CommandOutput. have one output field for each data type needed then fill unused fields with dummy data or empty. then use data as needed...
+// --- !!THIS!!
+// to solve structs being moved pass refs to functions??
+// ---
+// possibly use options for each output in the unwrap function so can be left completely blank the but creates problem of looking through each outcome in main..
