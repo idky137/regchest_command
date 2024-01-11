@@ -47,8 +47,8 @@ pub fn command_lib<'b>(
     entries.into_iter().collect()
 }
 
-pub enum CommandInput {
-    DoUserCommand((String, Vec<String>, LightClient)),
+pub enum CommandInput<'c> {
+    DoUserCommand((String, Vec<String>, &'c LightClient)),
     UnfundedClient(RegtestNetwork),
     Faucet(Pool, RegtestNetwork),
     FaucetRecipient(Pool, RegtestNetwork),
@@ -317,14 +317,16 @@ fn main() {
     // --- Test 2a: DoUserCommand:Balance
     println!("Test entry 2a: Calling run_command::do_user_command::balance:");
     let command_str_2a = "do_user_command";
-    let command_inputs_2a = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
+    let command_inputs_2a =
+        CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient));
     let command_output_2a = run_command(command_str_2a, &command_inputs_2a);
     print_command(&command_output_2a);
 
     // --- Test 2b: DoUserCommand:Balance
     println!("Test entry 2b: Calling run_command::do_user_command::balance:");
     let command_str_2b = "do_user_command";
-    let command_inputs_2b = CommandInput::DoUserCommand(("balance".to_string(), vec![], recipient));
+    let command_inputs_2b =
+        CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient));
     let command_output_2b = run_command(command_str_2b, &command_inputs_2b);
     print_command(&command_output_2b);
 
@@ -336,11 +338,11 @@ fn main() {
     print_command(&command_output_3a);
 
     // --- Test 3b: GenerateNBlocksReturnNewHeight
-    println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height:");
-    let command_str_3b = "generate_n_blocks_return_new_height";
-    let command_inputs_3b = CommandInput::GenerateNBlocksReturnNewHeight(regtest_manager, 10);
-    let command_output_3b = run_command(command_str_3b, &command_inputs_3b);
-    print_command(&command_output_3b);
+    // println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height:");
+    // let command_str_3b = "generate_n_blocks_return_new_height";
+    // let command_inputs_3b = CommandInput::GenerateNBlocksReturnNewHeight(regtest_manager, 10);
+    // let command_output_3b = run_command(command_str_3b, &command_inputs_3b);
+    // print_command(&command_output_3b);
 }
 
 // create function that takes CommandOutput as its input, unwraps it, then outputs each field in CommandOutput. have one output field for each data type needed then fill unused fields with dummy data or empty. then use data as needed...
