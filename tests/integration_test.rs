@@ -1,19 +1,17 @@
-// regchest_command main.rs
-// use: command library to build custom scenarios.
+// integration_test.rs
+// use: holds tests for regchest_command
 // authers: idky137
 //
-
-use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
-use zingoconfig::RegtestNetwork;
-use zingolib::{lightclient::LightClient, wallet::Pool};
 
 use regchest_command::regchest_command::{
     print_command, regchest_command, CommandInput, CommandOutput,
 };
+use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
+use zingoconfig::RegtestNetwork;
+use zingolib::{lightclient::LightClient, wallet::Pool};
 
-// --- main
-// --- used for testing..
-fn main() {
+#[test]
+fn test_basic_no_panic() {
     println!("Starting Tests:");
     let regtest_network = RegtestNetwork::all_upgrades_active();
 
