@@ -19,7 +19,7 @@ lazy_static! {
 }
 
 pub trait CommandExec<I, O> {
-    fn exec<'a>(&self, com_inputs: I) -> O;
+    fn exec(&self, com_inputs: I) -> O;
 }
 
 // --- command_lib
@@ -81,138 +81,145 @@ pub enum CommandOutput {
 struct DoUserCommand {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for DoUserCommand {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let com_out: String;
         match com_inputs {
-            CommandInput::DoUserCommand((s, v, lc)) => {
+            CommandInput::DoUserCommand((command_string, input_vec, lightclient)) => {
                 println!("Test entry - in DoUserCommand");
-                let v_slice: Vec<&str> = v.iter().map(|s| s.as_str()).collect();
-                com_out = do_user_command(&s, &v_slice, &lc);
+                let v_slice: Vec<&str> = input_vec.iter().map(|s| s.as_str()).collect();
+                let com_out = do_user_command(command_string, &v_slice, lightclient);
+                CommandOutput::DoUserCommand(com_out)
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::DoUserCommand(com_out)
     }
 }
 
 struct UnfundedClient {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for UnfundedClient {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let regtest_manager: RegtestManager;
-        let cph: ChildProcessHandler;
-        let client: LightClient;
         match com_inputs {
-            CommandInput::UnfundedClient(rn) => {
+            CommandInput::UnfundedClient(regtest_network) => {
                 println!("Test entry - in UnfundedClient");
-                (regtest_manager, cph, client) =
-                    RT.block_on(async move { scenarios::unfunded_client(*rn).await });
+                let (regtest_manager, cph, client) =
+                    RT.block_on(async move { scenarios::unfunded_client(*regtest_network).await });
+
+                CommandOutput::UnfundedClient(regtest_manager, cph, client)
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::UnfundedClient(regtest_manager, cph, client)
     }
 }
 
 struct Faucet {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for Faucet {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let regtest_manager: RegtestManager;
-        let cph: ChildProcessHandler;
-        let client: LightClient;
         match com_inputs {
-            CommandInput::Faucet(p, rn) => {
+            CommandInput::Faucet(pool, regtest_network) => {
                 println!("Test entry - in Faucet");
-                (regtest_manager, cph, client) =
-                    RT.block_on(async move { scenarios::faucet(*p, *rn).await });
+                let (regtest_manager, cph, client) =
+                    RT.block_on(async move { scenarios::faucet(*pool, *regtest_network).await });
+
+                CommandOutput::Faucet(regtest_manager, cph, client)
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::Faucet(regtest_manager, cph, client)
     }
 }
 
 struct FaucetRecipient {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for FaucetRecipient {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let regtest_manager: RegtestManager;
-        let cph: ChildProcessHandler;
-        let faucet: LightClient;
-        let recipient: LightClient;
         match com_inputs {
-            CommandInput::FaucetRecipient(p, rn) => {
+            CommandInput::FaucetRecipient(pool, regtest_network) => {
                 println!("Test entry - in FaucetRecipient");
 
-                (regtest_manager, cph, faucet, recipient) =
-                    RT.block_on(async move { scenarios::faucet_recipient(*p, *rn).await });
+                let (regtest_manager, cph, faucet, recipient) = RT.block_on(async move {
+                    scenarios::faucet_recipient(*pool, *regtest_network).await
+                });
+
+                CommandOutput::FaucetRecipient(regtest_manager, cph, faucet, recipient)
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::FaucetRecipient(regtest_manager, cph, faucet, recipient)
     }
 }
 
 struct FaucetFundedRecipient {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for FaucetFundedRecipient {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let regtest_manager: RegtestManager;
-        let cph: ChildProcessHandler;
-        let faucet: LightClient;
-        let recipient: LightClient;
-        let opo1: Option<String>;
-        let opo2: Option<String>;
-        let opo3: Option<String>;
         match com_inputs {
-            CommandInput::FaucetFundedRecipient(op1, op2, op3, p, rn) => {
+            CommandInput::FaucetFundedRecipient(
+                option_1,
+                option_2,
+                option_3,
+                pool,
+                regtest_network,
+            ) => {
                 println!("Test entry - in FaucetFundedRecipient");
-                (regtest_manager, cph, faucet, recipient, opo1, opo2, opo3) =
-                    RT.block_on(async move {
-                        scenarios::faucet_funded_recipient(*op1, *op2, *op3, *p, *rn).await
-                    });
+                let (
+                    regtest_manager,
+                    cph,
+                    faucet,
+                    recipient,
+                    option_out_1,
+                    option_out_2,
+                    option_out_3,
+                ) = RT.block_on(async move {
+                    scenarios::faucet_funded_recipient(
+                        *option_1,
+                        *option_2,
+                        *option_3,
+                        *pool,
+                        *regtest_network,
+                    )
+                    .await
+                });
+                CommandOutput::FaucetFundedRecipient(
+                    regtest_manager,
+                    cph,
+                    faucet,
+                    recipient,
+                    option_out_1,
+                    option_out_2,
+                    option_out_3,
+                )
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::FaucetFundedRecipient(
-            regtest_manager,
-            cph,
-            faucet,
-            recipient,
-            opo1,
-            opo2,
-            opo3,
-        )
     }
 }
 
 struct GenerateNBlocksReturnNewHeight {}
 impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for GenerateNBlocksReturnNewHeight {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
-        let com_out: u32;
         match com_inputs {
-            CommandInput::GenerateNBlocksReturnNewHeight(rm, n) => {
+            CommandInput::GenerateNBlocksReturnNewHeight(regtest_manager, blocks) => {
                 println!("Test entry - in GenerateNBlocksReturnNewHeight");
-                com_out = RT
-                    .block_on(async move { generate_n_blocks_return_new_height(&rm, *n).await })
+                let com_out = RT
+                    .block_on(async move {
+                        generate_n_blocks_return_new_height(regtest_manager, *blocks).await
+                    })
                     .expect("Invalid response returned");
+                CommandOutput::GenerateNBlocksReturnNewHeight(com_out)
             }
             _ => {
                 panic!("Unexpected Command Input variant");
             }
         }
-        CommandOutput::GenerateNBlocksReturnNewHeight(com_out)
     }
 }
 
 // --- run_com
-// --- runs command received in "com_nametype"and returns output
+// --- runs command received as &str with input type CommandInput and returns output type CommandOutput
 fn run_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
     let com_lib = command_lib();
 
@@ -227,7 +234,7 @@ fn run_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
     com_output
 }
 
-// --- print_co
+// --- print_command
 // --- takes CommandOutput Enum and prints to console
 fn print_command(co: &CommandOutput) {
     println!("Test entry - in print_command:");
@@ -323,7 +330,7 @@ fn main() {
     print_command(&command_output_2a);
 
     // --- Test 2b: DoUserCommand:Balance
-    println!("Test entry 2b: Calling run_command::do_user_command::balance:");
+    println!("Test entry 2b: Calling run_command::do_user_command::address:");
     let command_str_2b = "do_user_command";
     let command_inputs_2b =
         CommandInput::DoUserCommand(("addresses".to_string(), vec![], &recipient));
@@ -331,22 +338,16 @@ fn main() {
     print_command(&command_output_2b);
 
     // --- Test 3a: GenerateNBlocksReturnNewHeight
-    println!("Test entry 3a: Calling run_command::generate_n_blocks_return_new_height:");
+    println!("Test entry 3a: Calling run_command::generate_n_blocks_return_new_height(0):");
     let command_str_3a = "generate_n_blocks_return_new_height";
     let command_inputs_3a = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 0);
     let command_output_3a = run_command(command_str_3a, &command_inputs_3a);
     print_command(&command_output_3a);
 
     // --- Test 3b: GenerateNBlocksReturnNewHeight
-    println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height:");
+    println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height(10):");
     let command_str_3b = "generate_n_blocks_return_new_height";
     let command_inputs_3b = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 10);
     let command_output_3b = run_command(command_str_3b, &command_inputs_3b);
     print_command(&command_output_3b);
 }
-
-// create function that takes CommandOutput as its input, unwraps it, then outputs each field in CommandOutput. have one output field for each data type needed then fill unused fields with dummy data or empty. then use data as needed...
-// --- !!THIS!!
-// to solve structs being moved pass refs to functions??
-// ---
-// possibly use options for each output in the unwrap function so can be left completely blank the but creates problem of looking through each outcome in main..
