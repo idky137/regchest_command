@@ -218,9 +218,9 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for GenerateNBlocksRet
     }
 }
 
-// --- run_com
+// --- regchest_command
 // --- runs command received as &str with input type CommandInput and returns output type CommandOutput
-fn run_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
+pub fn regchest_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
     let com_lib = command_lib();
 
     println!("Test entry - in run_command:");
@@ -235,18 +235,18 @@ fn run_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
 }
 
 // --- print_command
-// --- takes CommandOutput Enum and prints to console
-fn print_command(co: &CommandOutput) {
+// --- prints output message
+pub fn print_command(co: &CommandOutput) {
     println!("Test entry - in print_command:");
     match co {
         CommandOutput::DoUserCommand(user_command) => {
             println!("DoUserCommand Output: {}", user_command);
         }
         CommandOutput::UnfundedClient(_regtest_manager, _child_process_handler, _light_client) => {
-            println!("Scenario::UnfundedClient");
+            println!("Scenario::UnfundedClient: Scenario loaded");
         }
         CommandOutput::Faucet(_regtest_manager, _child_process_handler, _light_client) => {
-            println!("Scenario::Faucet");
+            println!("Scenario::Faucet: Scenario loaded");
         }
         CommandOutput::FaucetRecipient(
             _regtest_manager,
@@ -254,7 +254,7 @@ fn print_command(co: &CommandOutput) {
             _sender_light_client,
             _recipient_light_client,
         ) => {
-            println!("Scenario::FaucetRecipient");
+            println!("Scenario::FaucetRecipient: Scenario loaded");
         }
         CommandOutput::FaucetFundedRecipient(
             _regtest_manager,
@@ -265,7 +265,7 @@ fn print_command(co: &CommandOutput) {
             _optional_field2,
             _optional_field3,
         ) => {
-            println!("Scenario::FaucetFundedRecipient");
+            println!("Scenario::FaucetFundedRecipient: Scenario loaded");
         }
         CommandOutput::GenerateNBlocksReturnNewHeight(new_height) => {
             println!("GenerateNBlocksReturnNewHeight Output: {}", new_height);
@@ -289,7 +289,7 @@ fn main() {
         Pool::Orchard,
         regtest_network,
     );
-    let command_output_1 = run_command(command_str_1, &command_inputs_1);
+    let command_output_1 = regchest_command(command_str_1, &command_inputs_1);
     print_command(&command_output_1);
     let regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
@@ -326,28 +326,28 @@ fn main() {
     let command_str_2a = "do_user_command";
     let command_inputs_2a =
         CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient));
-    let command_output_2a = run_command(command_str_2a, &command_inputs_2a);
+    let command_output_2a = regchest_command(command_str_2a, &command_inputs_2a);
     print_command(&command_output_2a);
 
-    // --- Test 2b: DoUserCommand:Balance
-    println!("Test entry 2b: Calling run_command::do_user_command::address:");
+    // --- Test 2b: DoUserCommand:Adresses
+    println!("Test entry 2b: Calling run_command::do_user_command::addresses:");
     let command_str_2b = "do_user_command";
     let command_inputs_2b =
         CommandInput::DoUserCommand(("addresses".to_string(), vec![], &recipient));
-    let command_output_2b = run_command(command_str_2b, &command_inputs_2b);
+    let command_output_2b = regchest_command(command_str_2b, &command_inputs_2b);
     print_command(&command_output_2b);
 
-    // --- Test 3a: GenerateNBlocksReturnNewHeight
+    // --- Test 3a: GenerateNBlocksReturnNewHeight(0)
     println!("Test entry 3a: Calling run_command::generate_n_blocks_return_new_height(0):");
     let command_str_3a = "generate_n_blocks_return_new_height";
     let command_inputs_3a = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 0);
-    let command_output_3a = run_command(command_str_3a, &command_inputs_3a);
+    let command_output_3a = regchest_command(command_str_3a, &command_inputs_3a);
     print_command(&command_output_3a);
 
-    // --- Test 3b: GenerateNBlocksReturnNewHeight
+    // --- Test 3b: GenerateNBlocksReturnNewHeight(10)
     println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height(10):");
     let command_str_3b = "generate_n_blocks_return_new_height";
     let command_inputs_3b = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 10);
-    let command_output_3b = run_command(command_str_3b, &command_inputs_3b);
+    let command_output_3b = regchest_command(command_str_3b, &command_inputs_3b);
     print_command(&command_output_3b);
 }
