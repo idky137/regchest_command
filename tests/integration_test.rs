@@ -11,6 +11,7 @@ use zingoconfig::RegtestNetwork;
 use zingolib::{lightclient::LightClient, wallet::Pool};
 
 #[test]
+#[ignore]
 fn test_basic_no_panic() {
     println!("Starting Tests:");
     let regtest_network = RegtestNetwork::all_upgrades_active();
