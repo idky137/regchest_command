@@ -1,41 +1,43 @@
-// regchest_command main.rs
+// main.rs
 // use: command library to build custom scenarios.
 // authers: idky137
 //
 
+use lazy_static::lazy_static;
+use tokio::runtime::Runtime;
 use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
 use zingoconfig::RegtestNetwork;
-use zingolib::{lightclient::LightClient, wallet::Pool};
+use zingolib::{get_base_address, lightclient::LightClient, wallet::Pool};
 
 use regchest_command::regchest_command::{
     print_command, regchest_command, CommandInput, CommandOutput,
 };
 
-// --- main
-// --- used for testing..
-fn main() {
-    println!("Starting Tests:");
-    let regtest_network = RegtestNetwork::all_upgrades_active();
+lazy_static! {
+    static ref RT: Runtime = tokio::runtime::Runtime::new().unwrap();
+}
 
-    // --- Test 1: Scenario:FaucetFundedRecipient
-    println!("Test entry 1: Calling run_command::scenario::faucet_funded_recipient:");
-    let command_str_1 = "scenarios::faucet_funded_recipient";
-    let command_inputs_1 = CommandInput::FaucetFundedRecipient(
-        Some(100_000),
-        Some(100_000),
-        Some(100_000),
-        Pool::Orchard,
-        regtest_network,
-    );
-    let command_output_1 = regchest_command(command_str_1, &command_inputs_1);
-    print_command(&command_output_1);
+// --- main
+// --- usage example
+fn main() {
+    let regtest_network = RegtestNetwork::all_upgrades_active();
     let regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
-    let _faucet: LightClient;
+    let faucet: LightClient;
     let recipient: LightClient;
-    let _opt1: Option<String>;
-    let _opt2: Option<String>;
-    let _opt3: Option<String>;
+
+    let command_output_1 = regchest_command(
+        "scenarios::faucet_funded_recipient",
+        &CommandInput::FaucetFundedRecipient(
+            Some(100_000),
+            Some(100_000),
+            Some(100_000),
+            Pool::Orchard,
+            regtest_network,
+        ),
+    );
+    print_command(&command_output_1);
+
     match command_output_1 {
         CommandOutput::FaucetFundedRecipient(
             regtest_manager_v,
@@ -48,44 +50,51 @@ fn main() {
         ) => {
             regtest_manager = regtest_manager_v;
             _cph = cph_v;
-            _faucet = faucet_v;
+            faucet = faucet_v;
             recipient = recipient_v;
-            _opt1 = opt1_v;
-            _opt2 = opt2_v;
-            _opt3 = opt3_v;
+            let _opt1 = opt1_v;
+            let _opt2 = opt2_v;
+            let _opt3 = opt3_v;
         }
         _ => {
             panic!("Error: Incorrect output");
         }
     }
 
-    // --- Test 2a: DoUserCommand:Balance
-    println!("Test entry 2a: Calling run_command::do_user_command::balance:");
-    let command_str_2a = "do_user_command";
-    let command_inputs_2a =
-        CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient));
-    let command_output_2a = regchest_command(command_str_2a, &command_inputs_2a);
-    print_command(&command_output_2a);
+    let command_output_2 = regchest_command(
+        "do_user_command",
+        &CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient)),
+    );
+    print_command(&command_output_2);
 
-    // --- Test 2b: DoUserCommand:Adresses
-    println!("Test entry 2b: Calling run_command::do_user_command::addresses:");
-    let command_str_2b = "do_user_command";
-    let command_inputs_2b =
-        CommandInput::DoUserCommand(("addresses".to_string(), vec![], &recipient));
-    let command_output_2b = regchest_command(command_str_2b, &command_inputs_2b);
-    print_command(&command_output_2b);
+    let command_output_3 = regchest_command(
+        "do_user_command",
+        &CommandInput::DoUserCommand((
+            "send".to_string(),
+            vec![
+                RT.block_on(async { get_base_address!(&recipient, "unified") }),
+                "100000".to_string(),
+            ],
+            &faucet,
+        )),
+    );
+    print_command(&command_output_3);
 
-    // --- Test 3a: GenerateNBlocksReturnNewHeight(0)
-    println!("Test entry 3a: Calling run_command::generate_n_blocks_return_new_height(0):");
-    let command_str_3a = "generate_n_blocks_return_new_height";
-    let command_inputs_3a = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 0);
-    let command_output_3a = regchest_command(command_str_3a, &command_inputs_3a);
-    print_command(&command_output_3a);
+    let command_output_4 = regchest_command(
+        "generate_n_blocks_return_new_height",
+        &CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 1),
+    );
+    print_command(&command_output_4);
 
-    // --- Test 3b: GenerateNBlocksReturnNewHeight(10)
-    println!("Test entry 3b: Calling run_command::generate_n_blocks_return_new_height(10):");
-    let command_str_3b = "generate_n_blocks_return_new_height";
-    let command_inputs_3b = CommandInput::GenerateNBlocksReturnNewHeight(&regtest_manager, 10);
-    let command_output_3b = regchest_command(command_str_3b, &command_inputs_3b);
-    print_command(&command_output_3b);
+    let command_output_5 = regchest_command(
+        "do_user_command",
+        &CommandInput::DoUserCommand(("sync".to_string(), vec![], &recipient)),
+    );
+    print_command(&command_output_5);
+
+    let command_output_6 = regchest_command(
+        "do_user_command",
+        &CommandInput::DoUserCommand(("balance".to_string(), vec![], &recipient)),
+    );
+    print_command(&command_output_6);
 }

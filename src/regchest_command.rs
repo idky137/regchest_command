@@ -84,7 +84,6 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for DoUserCommand {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
         match com_inputs {
             CommandInput::DoUserCommand((command_string, input_vec, lightclient)) => {
-                println!("Test entry - in DoUserCommand");
                 let v_slice: Vec<&str> = input_vec.iter().map(|s| s.as_str()).collect();
                 let com_out = do_user_command(command_string, &v_slice, lightclient);
                 CommandOutput::DoUserCommand(com_out)
@@ -101,10 +100,8 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for UnfundedClient {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
         match com_inputs {
             CommandInput::UnfundedClient(regtest_network) => {
-                println!("Test entry - in UnfundedClient");
                 let (regtest_manager, cph, client) =
                     RT.block_on(async move { scenarios::unfunded_client(*regtest_network).await });
-
                 CommandOutput::UnfundedClient(regtest_manager, cph, client)
             }
             _ => {
@@ -119,10 +116,8 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for Faucet {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
         match com_inputs {
             CommandInput::Faucet(pool, regtest_network) => {
-                println!("Test entry - in Faucet");
                 let (regtest_manager, cph, client) =
                     RT.block_on(async move { scenarios::faucet(*pool, *regtest_network).await });
-
                 CommandOutput::Faucet(regtest_manager, cph, client)
             }
             _ => {
@@ -137,12 +132,9 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for FaucetRecipient {
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
         match com_inputs {
             CommandInput::FaucetRecipient(pool, regtest_network) => {
-                println!("Test entry - in FaucetRecipient");
-
                 let (regtest_manager, cph, faucet, recipient) = RT.block_on(async move {
                     scenarios::faucet_recipient(*pool, *regtest_network).await
                 });
-
                 CommandOutput::FaucetRecipient(regtest_manager, cph, faucet, recipient)
             }
             _ => {
@@ -163,7 +155,6 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for FaucetFundedRecipi
                 pool,
                 regtest_network,
             ) => {
-                println!("Test entry - in FaucetFundedRecipient");
                 let (
                     regtest_manager,
                     cph,
@@ -204,7 +195,6 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for GenerateNBlocksRet
     fn exec(&self, com_inputs: &'a CommandInput) -> CommandOutput {
         match com_inputs {
             CommandInput::GenerateNBlocksReturnNewHeight(regtest_manager, blocks) => {
-                println!("Test entry - in GenerateNBlocksReturnNewHeight");
                 let com_out = RT
                     .block_on(async move {
                         generate_n_blocks_return_new_height(regtest_manager, *blocks).await
@@ -223,9 +213,6 @@ impl<'a> CommandExec<&'a CommandInput<'a>, CommandOutput> for GenerateNBlocksRet
 // --- runs command received as &str with input type CommandInput and returns output type CommandOutput
 pub fn regchest_command(com_nametype: &str, com_inputs: &CommandInput) -> CommandOutput {
     let com_lib = command_lib();
-
-    println!("Test entry - in run_command:");
-
     let com_output = match com_lib.get(&com_nametype) {
         Some(value) => value.exec(com_inputs),
         None => {
@@ -238,7 +225,6 @@ pub fn regchest_command(com_nametype: &str, com_inputs: &CommandInput) -> Comman
 // --- print_command
 // --- prints output message
 pub fn print_command(co: &CommandOutput) {
-    println!("Test entry - in print_command:");
     match co {
         CommandOutput::DoUserCommand(user_command) => {
             println!("DoUserCommand Output: {}", user_command);
@@ -266,7 +252,12 @@ pub fn print_command(co: &CommandOutput) {
             _optional_field2,
             _optional_field3,
         ) => {
-            println!("Scenario::FaucetFundedRecipient: Scenario loaded");
+            println!(
+                "Scenario::FaucetFundedRecipient: Scenario loaded - {} {} {}",
+                _optional_field1.as_ref().unwrap(),
+                _optional_field2.as_ref().unwrap(),
+                _optional_field3.as_ref().unwrap()
+            );
         }
         CommandOutput::GenerateNBlocksReturnNewHeight(new_height) => {
             println!("GenerateNBlocksReturnNewHeight Output: {}", new_height);
