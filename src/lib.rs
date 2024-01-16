@@ -1,5 +1,5 @@
 // lib.rs
-// use:
+// use: command library to build custom scenarios.
 // authers: idky137
 //
 

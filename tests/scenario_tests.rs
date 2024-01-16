@@ -3,9 +3,7 @@
 // authers: idky137
 //
 
-use regchest_command::regchest_command::{
-    print_command, regchest_command, CommandInput, CommandOutput,
-};
+use regchest_command::regchest_command::{regchest_command, CommandInput, CommandOutput};
 use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
 use zingoconfig::RegtestNetwork;
 use zingolib::{
@@ -24,7 +22,6 @@ fn test_unfunded_client() {
     let _regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
     let recipient: LightClient;
-    let balance_out: String;
 
     match command_output_1 {
         CommandOutput::UnfundedClient(regtest_manager_v, cph_v, recipient_v) => {
@@ -43,27 +40,25 @@ fn test_unfunded_client() {
 
     match command_output_2 {
         CommandOutput::DoUserCommand(command_out) => {
-            balance_out = command_out;
+            let balance_out = command_out;
+            let balance_check = serde_json::to_string_pretty(&PoolBalances {
+                sapling_balance: Some(0),
+                verified_sapling_balance: Some(0),
+                spendable_sapling_balance: Some(0),
+                unverified_sapling_balance: Some(0),
+                orchard_balance: Some(0),
+                verified_orchard_balance: Some(0),
+                spendable_orchard_balance: Some(0),
+                unverified_orchard_balance: Some(0),
+                transparent_balance: Some(0),
+            })
+            .unwrap();
+            assert_eq!(balance_out, balance_check);
         }
         _ => {
             panic!("Error: Incorrect output");
         }
     }
-
-    let balance_check = serde_json::to_string_pretty(&PoolBalances {
-        sapling_balance: Some(0),
-        verified_sapling_balance: Some(0),
-        spendable_sapling_balance: Some(0),
-        unverified_sapling_balance: Some(0),
-        orchard_balance: Some(0),
-        verified_orchard_balance: Some(0),
-        spendable_orchard_balance: Some(0),
-        unverified_orchard_balance: Some(0),
-        transparent_balance: Some(0),
-    })
-    .unwrap();
-
-    assert_eq!(balance_out, balance_check);
 }
 
 #[test]
@@ -77,7 +72,6 @@ fn test_faucet() {
     let _regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
     let faucet: LightClient;
-    let balance_out: String;
 
     match command_output_1 {
         CommandOutput::Faucet(regtest_manager_v, cph_v, faucet_v) => {
@@ -96,27 +90,25 @@ fn test_faucet() {
 
     match command_output_2 {
         CommandOutput::DoUserCommand(command_out) => {
-            balance_out = command_out;
+            let balance_out = command_out;
+            let balance_check = serde_json::to_string_pretty(&PoolBalances {
+                sapling_balance: Some(0),
+                verified_sapling_balance: Some(0),
+                spendable_sapling_balance: Some(0),
+                unverified_sapling_balance: Some(0),
+                orchard_balance: Some(1875000000),
+                verified_orchard_balance: Some(1875000000),
+                spendable_orchard_balance: Some(1875000000),
+                unverified_orchard_balance: Some(0),
+                transparent_balance: Some(0),
+            })
+            .unwrap();
+            assert_eq!(balance_out, balance_check);
         }
         _ => {
             panic!("Error: Incorrect output");
         }
     }
-
-    let balance_check = serde_json::to_string_pretty(&PoolBalances {
-        sapling_balance: Some(0),
-        verified_sapling_balance: Some(0),
-        spendable_sapling_balance: Some(0),
-        unverified_sapling_balance: Some(0),
-        orchard_balance: Some(1875000000),
-        verified_orchard_balance: Some(1875000000),
-        spendable_orchard_balance: Some(1875000000),
-        unverified_orchard_balance: Some(0),
-        transparent_balance: Some(0),
-    })
-    .unwrap();
-
-    assert_eq!(balance_out, balance_check);
 }
 
 #[test]
@@ -131,7 +123,6 @@ fn test_faucet_recipient() {
     let _cph: ChildProcessHandler;
     let _faucet: LightClient;
     let recipient: LightClient;
-    let balance_out: String;
 
     match command_output_1 {
         CommandOutput::FaucetRecipient(regtest_manager_v, cph_v, faucet_v, recipient_v) => {
@@ -151,27 +142,25 @@ fn test_faucet_recipient() {
 
     match command_output_2 {
         CommandOutput::DoUserCommand(command_out) => {
-            balance_out = command_out;
+            let balance_out = command_out;
+            let balance_check = serde_json::to_string_pretty(&PoolBalances {
+                sapling_balance: Some(0),
+                verified_sapling_balance: Some(0),
+                spendable_sapling_balance: Some(0),
+                unverified_sapling_balance: Some(0),
+                orchard_balance: Some(0),
+                verified_orchard_balance: Some(0),
+                spendable_orchard_balance: Some(0),
+                unverified_orchard_balance: Some(0),
+                transparent_balance: Some(0),
+            })
+            .unwrap();
+            assert_eq!(balance_out, balance_check);
         }
         _ => {
             panic!("Error: Incorrect output");
         }
     }
-
-    let balance_check = serde_json::to_string_pretty(&PoolBalances {
-        sapling_balance: Some(0),
-        verified_sapling_balance: Some(0),
-        spendable_sapling_balance: Some(0),
-        unverified_sapling_balance: Some(0),
-        orchard_balance: Some(0),
-        verified_orchard_balance: Some(0),
-        spendable_orchard_balance: Some(0),
-        unverified_orchard_balance: Some(0),
-        transparent_balance: Some(0),
-    })
-    .unwrap();
-
-    assert_eq!(balance_out, balance_check);
 }
 
 #[test]
@@ -195,7 +184,6 @@ fn test_faucet_funded_recipient() {
     let _opt1: Option<String>;
     let _opt2: Option<String>;
     let _opt3: Option<String>;
-    let balance_out: String;
 
     match command_output_1 {
         CommandOutput::FaucetFundedRecipient(
@@ -226,25 +214,23 @@ fn test_faucet_funded_recipient() {
 
     match command_output_2 {
         CommandOutput::DoUserCommand(command_out) => {
-            balance_out = command_out;
+            let balance_out = command_out;
+            let balance_check = serde_json::to_string_pretty(&PoolBalances {
+                sapling_balance: Some(100000),
+                verified_sapling_balance: Some(100000),
+                spendable_sapling_balance: Some(100000),
+                unverified_sapling_balance: Some(0),
+                orchard_balance: Some(100000),
+                verified_orchard_balance: Some(100000),
+                spendable_orchard_balance: Some(100000),
+                unverified_orchard_balance: Some(0),
+                transparent_balance: Some(100000),
+            })
+            .unwrap();
+            assert_eq!(balance_out, balance_check);
         }
         _ => {
             panic!("Error: Incorrect output");
         }
     }
-
-    let balance_check = serde_json::to_string_pretty(&PoolBalances {
-        sapling_balance: Some(100000),
-        verified_sapling_balance: Some(100000),
-        spendable_sapling_balance: Some(100000),
-        unverified_sapling_balance: Some(0),
-        orchard_balance: Some(100000),
-        verified_orchard_balance: Some(100000),
-        spendable_orchard_balance: Some(100000),
-        unverified_orchard_balance: Some(0),
-        transparent_balance: Some(100000),
-    })
-    .unwrap();
-
-    assert_eq!(balance_out, balance_check);
 }
