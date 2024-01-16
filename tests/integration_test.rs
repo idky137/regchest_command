@@ -3,9 +3,8 @@
 // authers: idky137
 //
 
-use regchest_command::regchest_command::{
-    print_command, regchest_command, CommandInput, CommandOutput,
-};
+use regchest_command::regchest_command::{regchest_command, CommandInput, CommandOutput};
+use regchest_command::regchest_command_util::print_command;
 use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
 use zingoconfig::RegtestNetwork;
 use zingolib::{lightclient::LightClient, wallet::Pool};

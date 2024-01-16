@@ -4,3 +4,4 @@
 //
 
 pub mod regchest_command;
+pub mod regchest_command_util;
