@@ -1,5 +1,5 @@
-// main.rs
-// use: command library to build custom scenarios.
+// usage_examples.rs
+// use: usage examples
 // authers: idky137
 //
 
@@ -15,9 +15,9 @@ lazy_static! {
     static ref RT: Runtime = tokio::runtime::Runtime::new().unwrap();
 }
 
-// --- main
-// --- usage example
-fn main() {
+#[test]
+#[ignore]
+fn regchest_command_basic_usage() {
     let regtest_network = RegtestNetwork::all_upgrades_active();
     let regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
