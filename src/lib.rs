@@ -1,5 +1,5 @@
 // lib.rs
-// use: command library to build custom scenarios.
+// use: command library for building custom scenarios remotely.
 // authers: idky137
 //
 
