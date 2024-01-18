@@ -3,19 +3,13 @@
 // authers: idky137
 //
 
-use lazy_static::lazy_static;
+// --- main:
+// --- usage example.
 use regchest_command::regchest_command::CommandOutput;
 use regchest_command::regchest_command_util::server_print;
-use tokio::runtime::Runtime;
 use zingo_testutils::regtest::{ChildProcessHandler, RegtestManager};
 use zingolib::lightclient::LightClient;
 
-lazy_static! {
-    static ref RT: Runtime = tokio::runtime::Runtime::new().unwrap();
-}
-
-// --- main:
-// --- usage example.
 fn main() {
     let regtest_manager: RegtestManager;
     let _cph: ChildProcessHandler;
