@@ -71,7 +71,7 @@ fn regchest_command_basic_usage() {
             "send".to_string(),
             vec![
                 RT.block_on(async { get_base_address!(&recipient, "unified") }),
-                "100000".to_string(),
+                "100_000".to_string(),
             ],
             &faucet,
         )),
