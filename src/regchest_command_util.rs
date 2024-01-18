@@ -140,15 +140,12 @@ pub fn build_input_data<'a>(
                 if args.len() <= 4 || args.len() >= 7 {
                     panic!("do_user_command:{} requires either 5 or 6 args: ({},sending lightclient, target lightclient, amount to send, address type (unified, sapling or transparent), memo(optional))",args[0], args[0]);
                 }
-                if args[5].as_str() != "unified"
-                    || args[5].as_str() != "sapling"
-                    || args[5] != "transparent"
-                {
+                if args[4] != "unified" && args[4] != "sapling" && args[4] != "transparent" {
                     panic!("incorrect address type (unified, sapling or transparent)");
                 }
                 let mut memo = String::new();
                 if args.len() == 6 {
-                    memo = args[6].to_string();
+                    memo = args[5].to_string();
                 }
                 match (args[1].as_str(), args[2].as_str()) {
                     ("recipient", "recipient") => {
@@ -156,7 +153,7 @@ pub fn build_input_data<'a>(
                             args[0].to_string(),
                             vec![
                                 RT.block_on(async {
-                                    get_base_address!(&recipient_in.unwrap(), args[5].as_str())
+                                    get_base_address!(&recipient_in.unwrap(), args[4].as_str())
                                 }),
                                 args[3].to_string(),
                                 memo,
@@ -169,7 +166,7 @@ pub fn build_input_data<'a>(
                             args[0].to_string(),
                             vec![
                                 RT.block_on(async {
-                                    get_base_address!(&faucet_in.unwrap(), args[5].as_str())
+                                    get_base_address!(&faucet_in.unwrap(), args[4].as_str())
                                 }),
                                 args[3].to_string(),
                                 memo,
@@ -182,7 +179,7 @@ pub fn build_input_data<'a>(
                             args[0].to_string(),
                             vec![
                                 RT.block_on(async {
-                                    get_base_address!(&recipient_in.unwrap(), args[5].as_str())
+                                    get_base_address!(&recipient_in.unwrap(), args[4].as_str())
                                 }),
                                 args[3].to_string(),
                                 memo,
@@ -195,7 +192,7 @@ pub fn build_input_data<'a>(
                             args[0].to_string(),
                             vec![
                                 RT.block_on(async {
-                                    get_base_address!(&faucet_in.unwrap(), args[5].as_str())
+                                    get_base_address!(&faucet_in.unwrap(), args[4].as_str())
                                 }),
                                 args[3].to_string(),
                                 memo,
@@ -215,10 +212,7 @@ pub fn build_input_data<'a>(
                         args[0], args[0]
                     );
                 }
-                if args[2].as_str() != "transparent"
-                    || args[2].as_str() != "sapling"
-                    || args[2] != "all"
-                {
+                if args[2] != "transparent" && args[2] != "sapling" && args[2] != "all" {
                     panic!("incorrect pool type (transparent, sapling or all)");
                 }
                 if args[1] == "recipient" {
@@ -300,7 +294,7 @@ pub fn build_input_data<'a>(
         "scenarios::faucet" => {
             return CommandInput::Faucet(Pool::Orchard, RegtestNetwork::all_upgrades_active());
         }
-        "scenarios::faucent_recipient" => {
+        "scenarios::faucet_recipient" => {
             return CommandInput::FaucetRecipient(
                 Pool::Orchard,
                 RegtestNetwork::all_upgrades_active(),
