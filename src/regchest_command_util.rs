@@ -1,5 +1,5 @@
 // regchest_command_util.rs
-// use: - util functions for regchest_command
+// use: - lib util functions for regchest_command
 //      - print_command: prints output message from CommandOutput
 //      - build_input_data: builds CommandInput from vec of strings
 //      - server_command: calls regchest_command, building input with build_input_data.
