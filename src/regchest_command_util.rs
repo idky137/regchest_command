@@ -3,7 +3,8 @@
 //      - print_command: prints output message from CommandOutput
 //      - build_input_data: builds CommandInput from vec of strings
 //      - server_command: calls regchest_command, building input with build_input_data.
-//      - server_print:calls regchest_command, building inputs with build_input _data, and prints output to console.
+//      - server_print: calls regchest_command, building inputs with build_input _data, and prints output to console.
+//      - server_printout: calls regchest_command, building inputs with build_input _data, and prints output to console, returns string response.
 // authers: idky137
 //
 
@@ -47,6 +48,20 @@ pub fn server_print(
     );
     print_command(&command_out);
     command_out
+}
+
+// --- server_printout
+// --- calls regchest_command from Vec<String> inputs, print output to console, returns string response
+pub fn server_printout(
+    args: &Vec<String>,
+    regtest_manager_in: Option<&RegtestManager>,
+    recipient_in: Option<&LightClient>,
+    faucet_in: Option<&LightClient>,
+) -> String {
+    print_command(&regchest_command(
+        args[0].as_str(),
+        &build_input_data(args, regtest_manager_in, recipient_in, faucet_in),
+    ))
 }
 
 // --- build_input_data
@@ -384,16 +399,19 @@ pub fn build_input_data<'a>(
 
 // --- print_command
 // --- prints output message
-pub fn print_command(co: &CommandOutput) {
+pub fn print_command(co: &CommandOutput) -> String {
     match co {
         CommandOutput::DoUserCommand(user_command) => {
             println!("DoUserCommand Output: {}", user_command);
+            format!("DoUserCommand Output: {}", user_command)
         }
         CommandOutput::UnfundedClient(_regtest_manager, _child_process_handler, _light_client) => {
             println!("Scenario::UnfundedClient: Scenario loaded:");
+            "Scenario::UnfundedClient: Scenario loaded:".to_string()
         }
         CommandOutput::Faucet(_regtest_manager, _child_process_handler, _light_client) => {
             println!("Scenario::Faucet: Scenario loaded:");
+            "Scenario::Faucet: Scenario loaded:".to_string()
         }
         CommandOutput::FaucetRecipient(
             _regtest_manager,
@@ -402,6 +420,7 @@ pub fn print_command(co: &CommandOutput) {
             _recipient_light_client,
         ) => {
             println!("Scenario::FaucetRecipient: Scenario loaded:");
+            "Scenario::FaucetRecipient: Scenario loaded:".to_string()
         }
         CommandOutput::FaucetFundedRecipient(
             _regtest_manager,
@@ -418,9 +437,16 @@ pub fn print_command(co: &CommandOutput) {
                 _optional_field2.as_ref().unwrap(),
                 _optional_field3.as_ref().unwrap()
             );
+            format!(
+                "Scenario::FaucetFundedRecipient: scenario loaded: \n- {}\n- {}\n- {}",
+                _optional_field1.as_ref().unwrap(),
+                _optional_field2.as_ref().unwrap(),
+                _optional_field3.as_ref().unwrap()
+            )
         }
         CommandOutput::GenerateNBlocksReturnNewHeight(new_height) => {
             println!("GenerateNBlocksReturnNewHeight new height: {}", new_height);
+            format!("GenerateNBlocksReturnNewHeight new height: {}", new_height)
         }
     }
 }
